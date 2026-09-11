@@ -1,36 +1,36 @@
 import os
-import random
 import threading
-from datetime import datetime
 from flask import Flask
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+app_flask = Flask(__name__)
 
-flask_app = Flask(__name__)
-
-@flask_app.route('/')
+@app_flask.route('/')
 def home():
-    return "Bot Lucky Djet 225 en ligne ! 🚀"
+    return "Lucky Djet 225 - Bot en ligne!"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Bienvenue sur Lucky Djet 225 🇨🇮\nEnvoie /signal pour un pronostic ✈️")
+    await update.message.reply_text("🎰 Bienvenue sur Lucky Djet 225 !\n\nTape /jeu pour commencer le jeu !")
 
-async def signal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    c = round(random.uniform(1.2, 5.5), 2)
-    h = datetime.now().strftime("%H:%M:%S")
-    await update.message.reply_text(f"SIGNAL ✈️\nCote : {c}x\nHeure : {h}\nBonne chance !")
+async def jeu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("✈️ Le jeu arrive bientôt ! Prépare tes mises !")
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
-    flask_app.run(host="0.0.0.0", port=port)
+    app_flask.run(host="0.0.0.0", port=port)
 
-if __name__ == '__main__':
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("signal", signal))
-    
+def main():
+    if not BOT_TOKEN:
+        print("ERREUR: BOT_TOKEN manquant dans Render Environment!")
+        return
     threading.Thread(target=run_flask, daemon=True).start()
     print("Bot Telegram démarré...")
-    app.run_polling()
+    application = Application.builder().token(BOT_TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("jeu", jeu))
+    application.run_polling()
+
+if __name__ == "__main__":
+    main()
